@@ -2,51 +2,69 @@ name: Dot Camp – CI/CD → Hugging Face Spaces
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
   workflow_dispatch:
 
 env:
   PYTHON_VERSION: "3.11"
 
 jobs:
-
   deploy:
-    name: Deploy → huggingface.co/spaces/adamnouassida5/dot_camp
+    name: Deploy → Hugging Face Space
     runs-on: ubuntu-latest
+
     environment:
       name: production
       url: https://huggingface.co/spaces/adamnouassida5/the_dot_visa
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
 
       - name: Push to Hugging Face Space
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          # Store credentials so git uses the token, not a password
           git config --global credential.helper store
           echo "https://adamnouassida5:${HF_TOKEN}@huggingface.co" > ~/.git-credentials
 
-          git remote add hf "https://huggingface.co/spaces/adamnouassida5/the_dot_visa"
+          git remote remove hf 2>/dev/null || true
+          git remote add hf https://huggingface.co/spaces/adamnouassida5/the_dot_visa
+
           git push hf main --force
-          echo "✅ Deployed to https://huggingface.co/spaces/adamnouassida5/the_dot_visa"
+
+          echo "✅ Code pushed to Hugging Face"
 
       - name: Wait for Space to rebuild
         run: |
-          echo "Waiting for Space to rebuild…"
-          sleep 30
-          for i in $(seq 1 15); do
-            STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-              "https://adamnouassida5-the_dot_visa.hf.space/" || true)
-            echo "Attempt $i – HTTP $STATUS"
-            if [[ "$STATUS" == "200" ]]; then
+          SPACE_URL="https://adamnouassida5-the-dot-visa.hf.space"
+
+          echo "⏳ Waiting for Hugging Face Space to rebuild..."
+          sleep 60
+
+          for i in $(seq 1 30); do
+            STATUS=$(curl -L -s -o /dev/null -w "%{http_code}" "$SPACE_URL" || true)
+
+            echo "Attempt $i - HTTP $STATUS"
+
+            if [ "$STATUS" = "200" ]; then
               echo "✅ Space is live!"
               exit 0
             fi
+
             sleep 20
           done
-          echo "⚠️  Still building — check https://huggingface.co/spaces/adamnouassida5/the_dot_visa"
-          exit 0
+
+          echo "❌ Space failed to become available."
+          echo "Check logs:"
+          echo "https://huggingface.co/spaces/adamnouassida5/the_dot_visa?logs=container"
+
+          exit 1
