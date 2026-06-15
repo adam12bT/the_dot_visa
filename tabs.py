@@ -33,7 +33,7 @@ class Tab1SelectionFinale:
 
         xlsx_bytes = ExcelGenerator.generate(self._df_scored)
         st.download_button(
-            "📥 Télécharger le fichier Excel complet (4 feuilles)",
+            "📥 Télécharger le fichier Excel ",
             data=xlsx_bytes,
             file_name="vivatech_2026_selection.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -128,52 +128,6 @@ class Tab3DonneesCompletes:
         )
 
 
-class Tab4Statistiques:
-    """📈 Tab 4 — Visual statistics for eligible candidates."""
-
-    def __init__(self, df_f: pd.DataFrame, df_scored: pd.DataFrame):
-        self._df_f      = df_f
-        self._df_scored = df_scored
-
-    def render(self) -> None:
-        st.subheader("📈 Statistiques")
-        if len(self._df_f) == 0:
-            st.warning("Aucun éligible avec les filtres actuels.")
-            return
-
-        c1, c2 = st.columns(2)
-        with c1:
-            st.markdown("**Distribution des scores (éligibles)**")
-            st.bar_chart(self._df_f["SCORE TOTAL /10"].value_counts().sort_index())
-        with c2:
-            st.markdown("**Top secteurs (éligibles)**")
-            st.bar_chart(self._df_f["Secteur"].value_counts().head(10))
-
-        c3, c4 = st.columns(2)
-        with c3:
-            st.markdown("**Critères d'éligibilité (toutes candidatures)**")
-            st.bar_chart(pd.Series({
-                "The Dot":        int(self._df_scored["✅ Bénéficiaire The Dot"].sum()),
-                "Passport":       int(self._df_scored["✅ Passport valide"].sum()),
-                "Visa":           int(self._df_scored["✅ Visa valide"].sum()),
-                "Non autre dél.": int(self._df_scored["✅ Non sélec. autre déleg."].sum()),
-                "ÉLIGIBLES":      int(self._df_scored["ELIGIBLE"].sum()),
-            }))
-        with c4:
-            st.markdown("**Score moyen par critère (éligibles)**")
-            s_cols = [c for c in self._df_f.columns if c.startswith("S: ")]
-            avg = self._df_f[s_cols].mean().rename(
-                lambda x: x.replace("S: ", "").split(" (")[0]
-            )
-            st.bar_chart(avg)
-
-        c5, c6 = st.columns(2)
-        with c5:
-            st.markdown("**Répartition régions (éligibles)**")
-            st.bar_chart(self._df_f["Région"].value_counts())
-        with c6:
-            st.markdown("**Stade produit (éligibles)**")
-            st.bar_chart(self._df_f["Stade produit"].value_counts())
 
 
 class Tab5FicheDetaillee:

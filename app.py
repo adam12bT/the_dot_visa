@@ -6,7 +6,6 @@ from tabs import (
     Tab1SelectionFinale,
     Tab2ScoringComplet,
     Tab3DonneesCompletes,
-    Tab4Statistiques,
     Tab5FicheDetaillee,
 )
 
@@ -86,11 +85,10 @@ class VivaTechApp:
         st.divider()
 
         # Tabs
-        tab1, tab2, tab3, tab4, tab5 = st.tabs([
+        tab1, tab2, tab3, tab5 = st.tabs([
             "🏆 Sélection Finale",
             "📊 Scoring Complet",
             "📋 Toutes les Données",
-            "📈 Statistiques",
             "🔍 Fiche Détaillée",
         ])
 
@@ -102,8 +100,6 @@ class VivaTechApp:
             Tab2ScoringComplet(self._df_scored, self._df_f).render()
         with tab3:
             Tab3DonneesCompletes(self._df_scored).render()
-        with tab4:
-            Tab4Statistiques(self._df_f, self._df_scored).render()
         with tab5:
             Tab5FicheDetaillee(self._df_scored).render()
 
